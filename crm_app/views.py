@@ -1,6 +1,7 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from crm_app.models import *
+from crm_app.forms import OrderForm
 
 # Create your views here.
 
@@ -30,6 +31,7 @@ def products(request):
 
 
 def customer(request, pk):
+
     customer = Customer.objects.get(id=pk)
 
     # Grabbing Customer child object in the (Order) Model
@@ -40,3 +42,44 @@ def customer(request, pk):
     context = {'customer': customer,
                'orders': orders, 'order_count': order_count}
     return render(request, 'crm_app/customer.html', context)
+
+
+def createOrder(request):
+
+    form = OrderForm()
+
+    if request.method == 'POST':
+        # print('Printing Post:', request.POST)
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+
+    context = {'form': form}
+
+    return render(request, 'crm_app/order_form.html', context)
+
+
+def updateOrder(request, pk):
+    order = Order.objects.get(id=pk)
+    form = OrderForm(instance=order)
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+
+    context = {'form': form}
+    return render(request, 'crm_app/order_form.html', context)
+
+
+def deleteOrder(request, pk):
+
+    order = Order.objects.get(id=pk)
+    if request.method == 'POST':
+        order.delete()
+        return redirect('/')
+
+    context = {'item': order}
+    return render(request, 'crm_app/delete.html', context)
